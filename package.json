@@ -1,0 +1,19 @@
+{
+  "name": "purpur",
+  "productName": "purpur",
+  "version": "0.1.0",
+  "description": "Push-to-talk voice typing for macOS — speak, and purpur types it into any app.",
+  "main": "src/main/main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --smoke",
+    "selftest": "node scripts/selftest.js",
+    "gen:assets": "node scripts/gen-assets.js",
+    "build:helper": "bash helper/build.sh",
+    "setup": "npm run gen:assets && npm run build:helper"
+  },
+  "devDependencies": {
+    "electron": "^42.0.0"
+  }
+}

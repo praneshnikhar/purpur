@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <link rel="stylesheet" href="settings.css" />
+  <title>purpur</title>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>purpur</h1>
+    </div>
+    <div class="actions">
+      <button id="btn-start" class="btn primary">Start</button>
+      <button id="btn-stop" class="btn">Stop</button>
+      <span id="save-state" class="saved"></span>
+    </div>
+  </header>
+
+  <nav>
+    <button class="tab active" data-tab="general">General</button>
+    <button class="tab" data-tab="transcription">Transcription</button>
+    <button class="tab" data-tab="cleanup">Cleanup</button>
+    <button class="tab" data-tab="dictionary">Dictionary</button>
+    <button class="tab" data-tab="permissions">Permissions</button>
+    <button class="tab" data-tab="history">History</button>
+  </nav>
+
+  <main>
+    <section id="tab-general" class="panel active">
+      <label class="row">
+        <span>Push-to-talk key</span>
+        <select id="trigger">
+          <option value="option-hold">Right ⌥ hold</option>
+          <option value="fn-hold">Fn hold</option>
+          <option value="fn-doubletap">Fn double-tap (toggle)</option>
+          <option value="none">None (use shortcut below)</option>
+        </select>
+      </label>
+      <p class="hint">The helper listens for this key system-wide. Fn modes need Accessibility and Input Monitoring permissions for Purpur Helper.</p>
+      <label class="row">
+        <span>Fallback shortcut</span>
+        <input id="fallbackShortcut" type="text" placeholder="CommandOrControl+Shift+Space" />
+      </label>
+      <p class="hint">Works even when the helper is missing. Uses Electron global shortcuts — find a chord nothing else claims.</p>
+      <label class="row">
+        <span>Insert method</span>
+        <select id="insertMethod">
+          <option value="auto">Auto (Accessibility, else paste)</option>
+          <option value="ax">Accessibility only</option>
+          <option value="paste">Clipboard paste</option>
+        </select>
+      </label>
+      <label class="row">
+        <span>Play sounds</span>
+        <input id="sounds" type="checkbox" />
+      </label>
+      <label class="row">
+        <span>Sound volume</span>
+        <input id="soundVolume" type="range" min="0" max="1" step="0.05" />
+      </label>
+    </section>
+
+    <section id="tab-transcription" class="panel">
+      <label class="row">
+        <span>Provider</span>
+        <select id="provider">
+          <option value="mock">Mock (demo, no key needed)</option>
+          <option value="openai">OpenAI-compatible /audio/transcriptions</option>
+          <option value="whisper">Local whisper.cpp CLI</option>
+        </select>
+      </label>
+      <div class="grid" id="openai-fields">
+        <label class="row">
+          <span>Base URL</span>
+          <input id="sttBaseUrl" type="text" placeholder="https://api.openai.com/v1" />
+        </label>
+        <label class="row">
+          <span>API key</span>
+          <input id="sttApiKey" type="password" placeholder="sk-…" />
+        </label>
+        <label class="row">
+          <span>Model</span>
+          <input id="sttModel" type="text" placeholder="gpt-4o-transcribe" />
+        </label>
+        <label class="row">
+          <span>Language (optional)</span>
+          <input id="sttLanguage" type="text" placeholder="en" />
+        </label>
+        <label class="row">
+          <span>Live partial transcripts</span>
+          <input id="livePartials" type="checkbox" />
+        </label>
+      </div>
+      <div class="grid" id="whisper-fields">
+        <label class="row">
+          <span>whisper binary</span>
+          <input id="whisperBinary" type="text" placeholder="/opt/homebrew/bin/whisper-cli" />
+        </label>
+        <label class="row">
+          <span>Model file</span>
+          <input id="whisperModel" type="text" placeholder="/Users/me/models/ggml-base.en.bin" />
+        </label>
+        <label class="row">
+          <span>Arguments template</span>
+          <input id="whisperArgs" type="text" placeholder="-m {model} -f {wav} -nt" />
+        </label>
+      </div>
+      <div class="row">
+        <button id="btn-test-stt" class="btn">Test transcription</button>
+        <span id="stt-result" class="result"></span>
+      </div>
+    </section>
+
+    <section id="tab-cleanup" class="panel">
+      <label class="row">
+        <span>AI cleanup pass</span>
+        <input id="cleanupEnabled" type="checkbox" />
+      </label>
+      <p class="hint">Runs the transcript through a chat model to remove fillers and fix punctuation. Raw transcript is kept in history if this fails.</p>
+      <label class="row">
+        <span>Base URL</span>
+        <input id="cleanupBaseUrl" type="text" placeholder="https://api.openai.com/v1" />
+      </label>
+      <label class="row">
+        <span>API key</span>
+        <input id="cleanupApiKey" type="password" placeholder="sk-…" />
+      </label>
+      <label class="row">
+        <span>Model</span>
+        <input id="cleanupModel" type="text" placeholder="gpt-4o-mini" />
+      </label>
+      <label class="row">
+        <span>Style</span>
+        <select id="cleanupStyle">
+          <option value="clean">Clean prose</option>
+          <option value="email">Email</option>
+          <option value="notes">Notes / bullets</option>
+          <option value="code">Code-aware</option>
+          <option value="literal">Punctuation only</option>
+        </select>
+      </label>
+      <div class="row">
+        <button id="btn-test-cleanup" class="btn">Test cleanup</button>
+        <span id="cleanup-result" class="result"></span>
+      </div>
+    </section>
+
+    <section id="tab-dictionary" class="panel">
+      <p class="hint">Word-level substitutions applied to every transcript (e.g. “whisper flow” → “Wispr Flow”).</p>
+      <div class="row">
+        <input id="dict-from" type="text" placeholder="replace…" />
+        <input id="dict-to" type="text" placeholder="with…" />
+        <button id="dict-add" class="btn primary">Add</button>
+      </div>
+      <ul id="dict-list" class="list"></ul>
+    </section>
+
+    <section id="tab-permissions" class="panel">
+      <ul class="list" id="perm-list">
+        <li><span>Microphone</span><strong id="perm-mic">…</strong><button class="btn" data-perm="microphone">Open</button></li>
+        <li><span>Accessibility (helper)</span><strong id="perm-ax">…</strong><button class="btn" data-perm="accessibility">Open</button></li>
+        <li><span>Input Monitoring (helper)</span><strong id="perm-input">…</strong><button class="btn" data-perm="input">Open</button></li>
+      </ul>
+      <div class="row">
+        <button id="btn-refresh-perms" class="btn">Refresh status</button>
+        <button id="btn-request-mic" class="btn">Request microphone</button>
+      </div>
+    </section>
+
+    <section id="tab-history" class="panel">
+      <div class="row">
+        <input id="history-search" type="text" placeholder="Search transcripts…" />
+        <button id="btn-clear-history" class="btn danger">Clear all</button>
+      </div>
+      <ul id="history-list" class="list"></ul>
+    </section>
+  </main>
+
+  <script src="settings.js"></script>
+</body>
+</html>

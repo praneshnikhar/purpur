@@ -1,0 +1,5 @@
+node_modules/
+helper/dist/
+docs/rea-evidence.json
+.DS_Store
+*.log
